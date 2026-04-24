@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -10,7 +11,7 @@ export default function Register() {
     confirmPassword: "",
   });
 
-  //   update the form states
+  // update the form states
   const updateField = (field: string, value: string) => {
     setForm((prev) => ({
       ...prev,
@@ -19,7 +20,6 @@ export default function Register() {
   };
 
   // handle form submission
-
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // check if passwords match
@@ -27,68 +27,84 @@ export default function Register() {
       alert("Passwords do not match");
       return;
     }
-    // TODO: send form data to backend for registration
-    // but for now, just log the form data
     console.log(form);
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="bg-white p-8 rounded-2xl shadow-md w-full max-w-md">
-        <h1 className="text-2xl font-bold mb-6 text-center">
-          Create an Account
-        </h1>
+    <div className="min-h-screen flex items-center justify-center bg-linear-to-br from-slate-50 to-slate-100 px-4">
+      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border border-slate-100 my-8">
+        <div className="flex flex-col items-center mb-8">
+          <div className="text-3xl font-black tracking-tighter text-black mb-2">
+            Hire<span className="text-blue-600">Link</span>
+          </div>
+          <h1 className="text-xl font-semibold text-slate-900">
+            Create an Account
+          </h1>
+          <p className="text-slate-500 text-sm mt-1">Join our professional community</p>
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <input
-            type="text"
-            name="name"
-            placeholder="Full Name"
-            onChange={(e) => updateField("name", e.target.value)}
-            className="w-full p-3 border rounded-lg"
-            required
-          />
+        <form onSubmit={handleSubmit} className="space-y-5">
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 ml-1">Full Name</label>
+            <input
+              type="text"
+              name="name"
+              placeholder="John Doe"
+              onChange={(e) => updateField("name", e.target.value)}
+              className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-hidden transition-all text-slate-900"
+              required
+            />
+          </div>
 
-          <input
-            type="email"
-            name="email"
-            placeholder="Email Address"
-            onChange={(e) => updateField("email", e.target.value)}
-            className="w-full p-3 border rounded-lg"
-            required
-          />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 ml-1">Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="name@company.com"
+              onChange={(e) => updateField("email", e.target.value)}
+              className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-hidden transition-all text-slate-900"
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            name="password"
-            placeholder="Password"
-            onChange={(e) => updateField("password", e.target.value)}
-            className="w-full p-3 border rounded-lg"
-            required
-          />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 ml-1">Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="••••••••"
+              onChange={(e) => updateField("password", e.target.value)}
+              className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-hidden transition-all text-slate-900"
+              required
+            />
+          </div>
 
-          <input
-            type="password"
-            name="confirmPassword"
-            placeholder="Confirm Password"
-            onChange={(e) => updateField("confirmPassword", e.target.value)}
-            className="w-full p-3 border rounded-lg"
-            required
-          />
+          <div className="space-y-2">
+            <label className="text-sm font-medium text-slate-700 ml-1">Confirm Password</label>
+            <input
+              type="password"
+              name="confirmPassword"
+              placeholder="••••••••"
+              onChange={(e) => updateField("confirmPassword", e.target.value)}
+              className="w-full p-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 outline-hidden transition-all text-slate-900"
+              required
+            />
+          </div>
 
           <button
             type="submit"
-            className="w-full bg-black text-white py-3 rounded-lg hover:opacity-90"
+            className="w-full bg-slate-900 text-white py-3.5 rounded-xl font-semibold hover:bg-black transition-all active:scale-[0.98] shadow-lg shadow-slate-200"
           >
-            Register
+            Create account
           </button>
         </form>
 
-        <p className="text-sm text-center mt-4">
+        <p className="text-sm text-center mt-8 text-slate-600">
           Already have an account?{" "}
-          <a href="/login" className="text-blue-600 hover:underline">
-            Login
-          </a>
+          <Link href="/login" className="text-blue-600 font-semibold hover:underline">
+            Log in
+          </Link>
         </p>
       </div>
     </div>
