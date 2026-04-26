@@ -52,6 +52,17 @@ export default function HomePage() {
         >
         Illustration
       </motion.div>
+      <section className="px-8 py-12">
+        <h3 className="text-2xl font-semibold mb-6">Popular Categories</h3>
+        <div className="grid sm:grid-cols-2 md:grid-cols-4 gap-6">
+        {["Design", "Development", "Marketing", "Finance"].map((cat, i) => (
+        <div key={i} className="p-6 bg-white rounded-2xl shadow">
+          <h4 className="font-semibold">{cat}</h4>
+          <p className="text-sm text-gray-500">120+ jobs</p>
+        </div>
+        ))}
+      </div>
+    </section>
     </div>
   );
 }
