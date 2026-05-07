@@ -2,6 +2,7 @@ import {
   findUserById,
   updateUserById,
   deleteUserById,
+  getAllUsers,
   getJobseekerProfile,
   updateJobseekerProfile,
   getEmployerProfile,
@@ -77,5 +78,50 @@ export const deleteMe = async (req, res) => {
   } catch (error) {
     console.error("Delete me error:", error.message);
     res.status(500).json({ message: "Server error deleting account" });
+  }
+};
+
+// GET /api/users
+export const getUsers = async (req, res) => {
+  try {
+    const users = await getAllUsers();
+
+    if (!users || users.length === 0) {
+      return res.status(404).json({ message: "No users found" });
+    }
+
+    res.status(200).json({
+      message: "All users retrieved successfully",
+      count: users.length,
+      users,
+    });
+  } catch (error) {
+    console.error("Get all users error:", error.message);
+    res.status(500).json({ message: "Server error getting users" });
+  }
+};
+
+// DELETE /api/users/:id
+export const deleteUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Check if user exists
+    const user = await findUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Prevent admin from deleting themselves
+    if (parseInt(id) === req.user.id) {
+      return res.status(400).json({ message: "You cannot delete your own account this way" });
+    }
+
+    await deleteUserById(id);
+
+    res.status(200).json({ message: "User deleted successfully" });
+  } catch (error) {
+    console.error("Delete user error:", error.message);
+    res.status(500).json({ message: "Server error deleting user" });
   }
 };
