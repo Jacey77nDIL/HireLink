@@ -125,3 +125,32 @@ export const deleteUser = async (req, res) => {
     res.status(500).json({ message: "Server error deleting user" });
   }
 };
+
+// GET /api/users/:id
+export const getUserById = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    // Find user first to check they exist and get their role
+    const user = await findUserById(id);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Fetch the appropriate profile based on role
+    let profile;
+    if (user.role === "jobseeker") {
+      profile = await getJobseekerProfile(id);
+    } else if (user.role === "employer") {
+      profile = await getEmployerProfile(id);
+    } else {
+      // Admin users have no public profile
+      return res.status(403).json({ message: "This profile is not publicly available" });
+    }
+
+    res.status(200).json({ user: profile });
+  } catch (error) {
+    console.error("Get user by id error:", error.message);
+    res.status(500).json({ message: "Server error getting user" });
+  }
+};
