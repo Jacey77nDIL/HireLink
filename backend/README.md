@@ -46,6 +46,7 @@ backend/
         ├── middleware.js               # JWT auth + role-based access
         ├── validators.js
         ├── errorHandler.js
+        ├── pagination.js             # Shared page/limit parsing
         ├── email.js
         ├── init.sql                    # Database schema
         └── migrations/
@@ -131,6 +132,42 @@ Authorization: Bearer <token>
 ```
 
 Tokens are issued on register and login, valid for **7 days**. Roles: `jobseeker`, `employer`, `admin`.
+
+---
+
+## Pagination
+
+All list endpoints support optional query parameters:
+
+| Param | Default | Max | Description |
+| :--- | :--- | :--- | :--- |
+| `page` | `1` | — | Page number (1-based) |
+| `limit` | `10` | `100` | Items per page |
+
+**Paginated endpoints:**
+- `GET /api/jobs`
+- `GET /api/jobs/search`
+- `GET /api/applications`
+- `GET /api/applications/job/:job_id`
+- `GET /api/users` (admin)
+
+**Example response shape:**
+```json
+{
+  "message": "Job listings retrieved successfully",
+  "pagination": {
+    "page": 1,
+    "limit": 10,
+    "total": 42,
+    "totalPages": 5,
+    "hasNextPage": true,
+    "hasPrevPage": false
+  },
+  "jobs": []
+}
+```
+
+Empty pages return `200` with an empty array and `total: 0`.
 
 ---
 
@@ -477,6 +514,5 @@ Validation errors return:
 
 - Email notifications on application status changes
 - In-app notification system
-- Pagination on list endpoints
 - Resume file upload (only `resume_url` text field supported)
 - Dedicated admin dashboard endpoints beyond user management

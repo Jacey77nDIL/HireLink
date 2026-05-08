@@ -9,6 +9,7 @@ import {
 } from "./applications.model.js";
 import { findJobById } from "../jobs/jobs.model.js";
 import { formatApplication, formatApplications } from "./applications.utils.js";
+import { parsePagination, buildPagination } from "../core/pagination.js";
 
 const getJobId = (req) => req.params.job_id || req.params.jobId;
 
@@ -44,16 +45,13 @@ export const applyForJob = async (req, res) => {
 // GET /api/applications  |  GET /api/applications/me
 export const getMyApplications = async (req, res) => {
   try {
-    const applications = await findApplicationsByJobseeker(req.user.id);
-
-    if (!applications || applications.length === 0) {
-      return res.status(404).json({ message: "You have not applied for any jobs yet" });
-    }
+    const { page, limit, offset } = parsePagination(req.query);
+    const { rows, total } = await findApplicationsByJobseeker(req.user.id, { limit, offset });
 
     res.status(200).json({
       message: "Applications retrieved successfully",
-      count: applications.length,
-      applications: formatApplications(applications),
+      pagination: buildPagination(total, page, limit),
+      applications: formatApplications(rows),
     });
   } catch (error) {
     console.error("Get my applications error:", error.message);
@@ -104,16 +102,13 @@ export const getJobApplications = async (req, res) => {
       return res.status(403).json({ message: "You are not authorized to view these applications" });
     }
 
-    const applications = await findApplicationsByJob(jobId);
-
-    if (!applications || applications.length === 0) {
-      return res.status(404).json({ message: "No applications found for this job" });
-    }
+    const { page, limit, offset } = parsePagination(req.query);
+    const { rows, total } = await findApplicationsByJob(jobId, { limit, offset });
 
     res.status(200).json({
       message: "Applications retrieved successfully",
-      count: applications.length,
-      applications: formatApplications(applications),
+      pagination: buildPagination(total, page, limit),
+      applications: formatApplications(rows),
     });
   } catch (error) {
     console.error("Get job applications error:", error.message);

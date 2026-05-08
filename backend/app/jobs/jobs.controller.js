@@ -6,6 +6,7 @@ import {
   deleteJobById,
   searchJobs,
 } from "./jobs.model.js";
+import { parsePagination, buildPagination } from "../core/pagination.js";
 
 // POST /api/jobs
 export const postJob = async (req, res) => {
@@ -13,12 +14,10 @@ export const postJob = async (req, res) => {
     const employerId = req.user.id;
     const { title, description, location, industry, salary, salary_min, salary_max, job_type, deadline } = req.body;
 
-    // Validate required fields
     if (!title || !description || !location || !industry || !job_type) {
       return res.status(400).json({ message: "All required fields must be provided" });
     }
 
-    // Validate job_type
     if (!["full-time", "part-time", "contract"].includes(job_type)) {
       return res.status(400).json({ message: "Job type must be full-time, part-time or contract" });
     }
@@ -55,18 +54,15 @@ export const updateJob = async (req, res) => {
     const { id } = req.params;
     const { title, description, location, industry, salary, salary_min, salary_max, job_type, deadline } = req.body;
 
-    // Check if job exists
     const job = await findJobById(id);
     if (!job) {
       return res.status(404).json({ message: "Job listing not found" });
     }
 
-    // Check if the logged in employer owns this job
     if (job.employer_id !== req.user.id) {
       return res.status(403).json({ message: "You are not authorized to update this job listing" });
     }
 
-    // Validate job_type if provided
     if (job_type && !["full-time", "part-time", "contract"].includes(job_type)) {
       return res.status(400).json({ message: "Job type must be full-time, part-time or contract" });
     }
@@ -105,13 +101,11 @@ export const deleteJob = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Check if job exists
     const job = await findJobById(id);
     if (!job) {
       return res.status(404).json({ message: "Job listing not found" });
     }
 
-    // Check if the logged in employer owns this job
     if (job.employer_id !== req.user.id) {
       return res.status(403).json({ message: "You are not authorized to delete this job listing" });
     }
@@ -129,34 +123,33 @@ export const deleteJob = async (req, res) => {
 export const getJobs = async (req, res) => {
   try {
     const { title, keyword, location, industry, job_type, min_salary, max_salary } = req.query;
+    const { page, limit, offset } = parsePagination(req.query);
 
     if (min_salary !== undefined && max_salary !== undefined && Number(min_salary) > Number(max_salary)) {
       return res.status(400).json({ message: "min_salary cannot be greater than max_salary" });
     }
 
-    let jobs;
-    if (title || keyword || location || industry || job_type || min_salary !== undefined || max_salary !== undefined) {
-      jobs = await searchJobs({
-        title,
-        keyword,
-        location,
-        industry,
-        job_type,
-        min_salary: min_salary !== undefined ? Number(min_salary) : undefined,
-        max_salary: max_salary !== undefined ? Number(max_salary) : undefined,
-      });
-    } else {
-      jobs = await findAllJobs();
-    }
+    const hasFilters = title || keyword || location || industry || job_type || min_salary !== undefined || max_salary !== undefined;
 
-    if (!jobs || jobs.length === 0) {
-      return res.status(404).json({ message: "No job listings found" });
-    }
+    const { rows, total } = hasFilters
+      ? await searchJobs(
+          {
+            title,
+            keyword,
+            location,
+            industry,
+            job_type,
+            min_salary: min_salary !== undefined ? Number(min_salary) : undefined,
+            max_salary: max_salary !== undefined ? Number(max_salary) : undefined,
+          },
+          { limit, offset }
+        )
+      : await findAllJobs({ limit, offset });
 
     res.status(200).json({
       message: "Job listings retrieved successfully",
-      count: jobs.length,
-      jobs,
+      pagination: buildPagination(total, page, limit),
+      jobs: rows,
     });
   } catch (error) {
     console.error("Get jobs error:", error.message);
@@ -164,22 +157,26 @@ export const getJobs = async (req, res) => {
   }
 };
 
-// GET /api/jobs/search?title=&location=&min_salary=&max_salary=
+// GET /api/jobs/search
 export const searchJobsList = async (req, res) => {
   try {
     const { title, location, min_salary, max_salary } = req.query;
+    const { page, limit, offset } = parsePagination(req.query);
 
-    const jobs = await searchJobs({
-      title,
-      location,
-      min_salary: min_salary !== undefined ? Number(min_salary) : undefined,
-      max_salary: max_salary !== undefined ? Number(max_salary) : undefined,
-    });
+    const { rows, total } = await searchJobs(
+      {
+        title,
+        location,
+        min_salary: min_salary !== undefined ? Number(min_salary) : undefined,
+        max_salary: max_salary !== undefined ? Number(max_salary) : undefined,
+      },
+      { limit, offset }
+    );
 
     res.status(200).json({
       message: "Job search completed successfully",
-      count: jobs.length,
-      jobs,
+      pagination: buildPagination(total, page, limit),
+      jobs: rows,
     });
   } catch (error) {
     console.error("Search jobs error:", error.message);

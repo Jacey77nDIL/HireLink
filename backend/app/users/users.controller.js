@@ -11,6 +11,7 @@ import {
   getEmployerProfile,
   updateEmployerProfile,
 } from "./users.model.js";
+import { parsePagination, buildPagination } from "../core/pagination.js";
 
 // GET /api/users/me
 export const getMe = async (req, res) => {
@@ -123,16 +124,13 @@ export const changePassword = async (req, res) => {
 // GET /api/users
 export const getUsers = async (req, res) => {
   try {
-    const users = await getAllUsers();
-
-    if (!users || users.length === 0) {
-      return res.status(404).json({ message: "No users found" });
-    }
+    const { page, limit, offset } = parsePagination(req.query);
+    const { rows, total } = await getAllUsers({ limit, offset });
 
     res.status(200).json({
       message: "All users retrieved successfully",
-      count: users.length,
-      users,
+      pagination: buildPagination(total, page, limit),
+      users: rows,
     });
   } catch (error) {
     console.error("Get all users error:", error.message);

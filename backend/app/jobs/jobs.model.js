@@ -1,5 +1,57 @@
 import pool from "../core/db.js";
 
+const buildJobSearchFilters = (filters) => {
+  const { title, keyword, location, industry, job_type, min_salary, max_salary } = filters;
+  const titleFilter = title || keyword;
+
+  let whereClause = "WHERE 1=1";
+  const values = [];
+  let count = 1;
+
+  if (titleFilter) {
+    whereClause += ` AND j.title ILIKE $${count}`;
+    values.push(`%${titleFilter}%`);
+    count++;
+  }
+
+  if (location) {
+    whereClause += ` AND j.location ILIKE $${count}`;
+    values.push(`%${location}%`);
+    count++;
+  }
+
+  if (industry) {
+    whereClause += ` AND j.industry ILIKE $${count}`;
+    values.push(`%${industry}%`);
+    count++;
+  }
+
+  if (job_type) {
+    whereClause += ` AND j.job_type = $${count}`;
+    values.push(job_type);
+    count++;
+  }
+
+  if (min_salary != null) {
+    whereClause += ` AND j.salary_min IS NOT NULL AND COALESCE(j.salary_max, j.salary_min) >= $${count}`;
+    values.push(min_salary);
+    count++;
+  }
+
+  if (max_salary != null) {
+    whereClause += ` AND j.salary_min IS NOT NULL AND j.salary_min <= $${count}`;
+    values.push(max_salary);
+    count++;
+  }
+
+  return { whereClause, values };
+};
+
+const jobSelectBase = `
+  FROM jobs j
+  JOIN users u ON j.employer_id = u.id
+`;
+
 // Create a new job listing
 export const createJob = async (employerId, fields) => {
   const { title, description, location, industry, salary, salary_min, salary_max, job_type, deadline } = fields;
@@ -12,23 +64,29 @@ export const createJob = async (employerId, fields) => {
   return result.rows[0];
 };
 
-// Get all jobs
-export const findAllJobs = async () => {
+// Get all jobs (paginated)
+export const findAllJobs = async ({ limit, offset }) => {
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total ${jobSelectBase}`
+  );
+  const total = countResult.rows[0].total;
+
   const result = await pool.query(
     `SELECT j.*, u.name AS employer_name
-     FROM jobs j
-     JOIN users u ON j.employer_id = u.id
-     ORDER BY j.created_at DESC`
+     ${jobSelectBase}
+     ORDER BY j.created_at DESC
+     LIMIT $1 OFFSET $2`,
+    [limit, offset]
   );
-  return result.rows;
+
+  return { rows: result.rows, total };
 };
 
 // Get a single job by id
 export const findJobById = async (id) => {
   const result = await pool.query(
     `SELECT j.*, u.name AS employer_name
-     FROM jobs j
-     JOIN users u ON j.employer_id = u.id
+     ${jobSelectBase}
      WHERE j.id = $1`,
     [id]
   );
@@ -55,59 +113,27 @@ export const deleteJobById = async (id) => {
   await pool.query(`DELETE FROM jobs WHERE id = $1`, [id]);
 };
 
-// Search and filter jobs by title, location, salary range, and optional filters
-export const searchJobs = async (filters) => {
-  const { title, keyword, location, industry, job_type, min_salary, max_salary } = filters;
-  const titleFilter = title || keyword;
+// Search and filter jobs (paginated)
+export const searchJobs = async (filters, { limit, offset }) => {
+  const { whereClause, values } = buildJobSearchFilters(filters);
 
-  let query = `
-    SELECT j.*, u.name AS employer_name
-    FROM jobs j
-    JOIN users u ON j.employer_id = u.id
-    WHERE 1=1
-  `;
+  const countResult = await pool.query(
+    `SELECT COUNT(*)::int AS total ${jobSelectBase} ${whereClause}`,
+    values
+  );
+  const total = countResult.rows[0].total;
 
-  const values = [];
-  let count = 1;
+  const limitParam = values.length + 1;
+  const offsetParam = values.length + 2;
 
-  if (titleFilter) {
-    query += ` AND j.title ILIKE $${count}`;
-    values.push(`%${titleFilter}%`);
-    count++;
-  }
+  const result = await pool.query(
+    `SELECT j.*, u.name AS employer_name
+     ${jobSelectBase}
+     ${whereClause}
+     ORDER BY j.created_at DESC
+     LIMIT $${limitParam} OFFSET $${offsetParam}`,
+    [...values, limit, offset]
+  );
 
-  if (location) {
-    query += ` AND j.location ILIKE $${count}`;
-    values.push(`%${location}%`);
-    count++;
-  }
-
-  if (industry) {
-    query += ` AND j.industry ILIKE $${count}`;
-    values.push(`%${industry}%`);
-    count++;
-  }
-
-  if (job_type) {
-    query += ` AND j.job_type = $${count}`;
-    values.push(job_type);
-    count++;
-  }
-
-  if (min_salary != null) {
-    query += ` AND j.salary_min IS NOT NULL AND COALESCE(j.salary_max, j.salary_min) >= $${count}`;
-    values.push(min_salary);
-    count++;
-  }
-
-  if (max_salary != null) {
-    query += ` AND j.salary_min IS NOT NULL AND j.salary_min <= $${count}`;
-    values.push(max_salary);
-    count++;
-  }
-
-  query += ` ORDER BY j.created_at DESC`;
-
-  const result = await pool.query(query, values);
-  return result.rows;
+  return { rows: result.rows, total };
 };
