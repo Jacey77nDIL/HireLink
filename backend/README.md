@@ -21,31 +21,35 @@ REST API for the HireLink job board platform. Connects employers with job seeker
 
 ```
 backend/
-├── app.js                          # Entry point, route mounting, error handling
+├── app.js
 ├── package.json
 └── app/
     ├── auth/
     │   ├── auth.routes.js
-    │   └── auth.controller.js      # Register, login, logout, password reset
+    │   └── auth.controller.js          # Register, login, logout, password reset
     ├── users/
     │   ├── users.routes.js
-    │   ├── users.controller.js     # Profile CRUD, admin user management
+    │   ├── users.controller.js         # Profile CRUD, admin user management
     │   └── users.model.js
     ├── jobs/
     │   ├── jobs.routes.js
-    │   ├── jobs.controller.js      # Job CRUD + search/filter
+    │   ├── jobs.controller.js          # Job CRUD + search/filter
     │   └── jobs.model.js
     ├── applications/
-    │   ├── applications.routes.js
+    │   ├── apply.routes.js             # POST /api/apply/:job_id
+    │   ├── applications.routes.js      # List, withdraw, employer views, PATCH status
     │   ├── applications.controller.js
-    │   └── applications.model.js
+    │   ├── applications.model.js
+    │   └── applications.utils.js       # Maps DB rows to API model (user_id, etc.)
     └── core/
-        ├── db.js                   # PostgreSQL connection pool
-        ├── middleware.js           # JWT auth + role-based access
-        ├── validators.js           # Request validation rules
-        ├── errorHandler.js         # Global + PostgreSQL error handling
-        ├── email.js                # Password reset emails
-        └── init.sql                # Database schema
+        ├── db.js
+        ├── middleware.js               # JWT auth + role-based access
+        ├── validators.js
+        ├── errorHandler.js
+        ├── email.js
+        ├── init.sql                    # Database schema
+        └── migrations/
+            └── 001_applied_status.sql  # Upgrade script for existing databases
 ```
 
 ---
@@ -66,10 +70,16 @@ npm install
 
 ### Database Setup
 
-Run the schema script against your PostgreSQL database:
+**New database** — run the full schema:
 
 ```bash
 psql -d your_database_name -f app/core/init.sql
+```
+
+**Existing database** (upgrading from `pending` status) — run the migration:
+
+```bash
+psql -d your_database_name -f app/core/migrations/001_applied_status.sql
 ```
 
 ### Environment Variables
@@ -132,16 +142,23 @@ Defined in `app/core/init.sql`.
 | `jobseeker_profiles` | Bio, skills, experience, resume URL, location |
 | `employer_profiles` | Company name, description, industry, website, location |
 | `jobs` | Listings linked to `employer_id` |
-| `applications` | Job applications with status (`applied`, `accepted`, `rejected`) |
+| `applications` | Job applications (`job_id`, `jobseeker_id`, `status`, `cover_letter`) |
 | `password_reset_tokens` | One-time reset tokens (15-minute expiry) |
 
 On registration, an empty profile row is created automatically based on role (`jobseeker` or `employer`).
+
+**Applications table** — `jobseeker_id` is stored in the database; API responses expose it as `user_id`.
+
+| Column | Notes |
+| :--- | :--- |
+| `status` | `applied` (default), `accepted`, `rejected` |
+| `UNIQUE(job_id, jobseeker_id)` | Prevents duplicate applications |
 
 ---
 
 ## API Reference
 
-All routes are prefixed with `/api`. Unless noted, routes require authentication (`protect` middleware).
+All routes are prefixed with `/api`. Unless noted, routes require authentication.
 
 ### Auth — `/api/auth`
 
@@ -162,14 +179,6 @@ No authentication required.
   "email": "jane@example.com",
   "password": "securepass",
   "role": "jobseeker"
-}
-```
-
-**Reset password body:**
-```json
-{
-  "token": "reset_token_from_email",
-  "newPassword": "newsecurepass"
 }
 ```
 
@@ -212,37 +221,174 @@ No authentication required.
 | `industry` | Partial match on industry |
 | `job_type` | Exact match: `full-time`, `part-time`, or `contract` |
 
-**Job model fields:**
-
-| Field | Required | Notes |
-| :--- | :--- | :--- |
-| `title` | Yes | |
-| `description` | Yes | |
-| `location` | Yes | |
-| `industry` | Yes | |
-| `job_type` | Yes | `full-time`, `part-time`, or `contract` |
-| `salary` | No | |
-| `deadline` | No | ISO date string |
-
 ---
 
 ### Applications
 
-**Application model (API response):** `id`, `job_id`, `user_id`, `status` (`applied` | `accepted` | `rejected`)
+#### Application model (API response)
+
+| Field | Type | Description |
+| :--- | :--- | :--- |
+| `id` | number | Application ID |
+| `job_id` | number | Job listing ID |
+| `user_id` | number | Jobseeker who applied |
+| `status` | string | `applied`, `accepted`, or `rejected` |
+| `cover_letter` | string | Optional, set on apply |
+| `applied_at` | timestamp | When the application was submitted |
+
+List endpoints may include extra joined fields (e.g. `job_title`, `employer_name`, jobseeker profile fields).
+
+#### Application workflow
+
+```
+Jobseeker applies          Employer reviews              Jobseeker sees result
+─────────────────          ────────────────              ─────────────────────
+POST /api/apply/:job_id    GET /applications/job/:id     GET /api/applications
+        │                          │                              │
+        ▼                          ▼                              ▼
+   status: applied          view all applicants            status: accepted
+                            PATCH /:id/status              or rejected
+                            { "status": "accepted" }
+                            { "status": "rejected" }
+```
+
+#### Endpoints
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/apply/:job_id` | Jobseeker | Apply for a job. Optional `cover_letter` (max 1000 chars). |
+| `POST` | `/api/apply/:job_id` | Jobseeker | Submit an application for a job. |
 | `POST` | `/api/applications/:jobId` | Jobseeker | Same as above (alias). |
-| `GET` | `/api/applications` | Jobseeker | List the current user's applications with job details. |
+| `GET` | `/api/applications` | Jobseeker | List the current user's applications (includes updated status). |
 | `GET` | `/api/applications/me` | Jobseeker | Same as above (alias). |
-| `DELETE` | `/api/applications/:id` | Jobseeker (owner) | Withdraw an **applied** application. |
-| `GET` | `/api/applications/job/:job_id` | Employer (job owner) | View all applicants for a job (includes jobseeker profile). |
-| `PATCH` | `/api/applications/:id/status` | Employer (job owner) | Accept or reject an application (`accepted` / `rejected`). Visible to the jobseeker on `GET /api/applications`. |
+| `DELETE` | `/api/applications/:id` | Jobseeker (owner) | Withdraw an application (only while `applied`). |
+| `GET` | `/api/applications/job/:job_id` | Employer (job owner) | View all applicants for a job with jobseeker profiles. |
+| `PATCH` | `/api/applications/:id/status` | Employer (job owner) | Accept or reject an application. |
 
-**Application statuses:** `applied` (default), `accepted`, `rejected`
+#### Apply for a job
 
-Duplicate applications for the same job are rejected (`409`).
+```http
+POST /api/apply/5
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "cover_letter": "I am interested in this role."
+}
+```
+
+**Response (`201`):**
+```json
+{
+  "message": "Application submitted successfully",
+  "application": {
+    "id": 1,
+    "job_id": 5,
+    "user_id": 12,
+    "status": "applied",
+    "cover_letter": "I am interested in this role.",
+    "applied_at": "2026-05-16T10:00:00.000Z"
+  }
+}
+```
+
+Duplicate applications return `409`.
+
+#### List user's applications (jobseeker)
+
+```http
+GET /api/applications
+Authorization: Bearer <token>
+```
+
+**Response (`200`):**
+```json
+{
+  "message": "Applications retrieved successfully",
+  "count": 1,
+  "applications": [
+    {
+      "id": 1,
+      "job_id": 5,
+      "user_id": 12,
+      "status": "accepted",
+      "cover_letter": "I am interested in this role.",
+      "applied_at": "2026-05-16T10:00:00.000Z",
+      "job_title": "Software Engineer",
+      "location": "Remote",
+      "job_type": "full-time",
+      "industry": "Technology",
+      "salary": "$80,000",
+      "employer_name": "Acme Corp"
+    }
+  ]
+}
+```
+
+#### View applicants for a job (employer)
+
+```http
+GET /api/applications/job/5
+Authorization: Bearer <token>
+```
+
+**Response (`200`):**
+```json
+{
+  "message": "Applications retrieved successfully",
+  "count": 1,
+  "applications": [
+    {
+      "id": 1,
+      "job_id": 5,
+      "user_id": 12,
+      "status": "applied",
+      "jobseeker_name": "Jane Doe",
+      "jobseeker_email": "jane@example.com",
+      "bio": "...",
+      "skills": "JavaScript, Node.js",
+      "experience": "3 years",
+      "resume_url": "https://...",
+      "location": "Toronto"
+    }
+  ]
+}
+```
+
+#### Accept or reject (employer)
+
+```http
+PATCH /api/applications/1/status
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{ "status": "accepted" }
+```
+
+or
+
+```json
+{ "status": "rejected" }
+```
+
+**Rules:**
+- Only `accepted` or `rejected` are allowed
+- Application must currently be `applied`
+- Employer must own the job listing
+
+**Response (`200`):**
+```json
+{
+  "message": "Application accepted",
+  "application": {
+    "id": 1,
+    "job_id": 5,
+    "user_id": 12,
+    "status": "accepted"
+  }
+}
+```
+
+The jobseeker sees the updated status on their next `GET /api/applications` call.
 
 ---
 
@@ -263,7 +409,7 @@ Validation errors return:
 ```json
 {
   "message": "Validation failed",
-  "errors": [{ "field": "email", "message": "Please provide a valid email" }]
+  "errors": [{ "field": "status", "message": "Status must be accepted or rejected" }]
 }
 ```
 
