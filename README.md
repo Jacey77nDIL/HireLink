@@ -16,14 +16,14 @@ A full-stack Job Board Platform built for CSC 202. This platform connects employ
 
 | Name | Role |
 |------|------|
-| Fawaz Salimanu | Team Lead |
+| Fawaz Salimanu | Team Lead |24120112053|
 | Jason | Backend |
-| David Alamutu | Backend |
-| Hillary Ilona | Frontend |
-| Muhammad Nasiru | Frontend |
-| Anthony Okpuruka | DevOps |
-| Tomba Bobmanuel | QA / Documentation |
-| Timilehin Adeyoyin | QA / Documentation |
+| David Alamutu | Backend |24120112009|
+| Hillary Ilona | Frontend |25120112059|
+| Muhammad Nasiru | Frontend |24120112032|
+| Anthony Okpuruka | DevOps |24120112044|
+| Tomba Bobmanuel | QA / Documentation |24120112016|
+| Timilehin Adeyoyin | QA / Documentation |24120112006|
 
 ## Setup Instructions
 To be added.
