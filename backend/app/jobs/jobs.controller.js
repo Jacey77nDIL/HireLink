@@ -11,7 +11,7 @@ import {
 export const postJob = async (req, res) => {
   try {
     const employerId = req.user.id;
-    const { title, description, location, industry, salary, job_type, deadline } = req.body;
+    const { title, description, location, industry, salary, salary_min, salary_max, job_type, deadline } = req.body;
 
     // Validate required fields
     if (!title || !description || !location || !industry || !job_type) {
@@ -23,12 +23,18 @@ export const postJob = async (req, res) => {
       return res.status(400).json({ message: "Job type must be full-time, part-time or contract" });
     }
 
+    if (salary_min != null && salary_max != null && salary_min > salary_max) {
+      return res.status(400).json({ message: "salary_min cannot be greater than salary_max" });
+    }
+
     const job = await createJob(employerId, {
       title,
       description,
       location,
       industry,
       salary,
+      salary_min: salary_min ?? null,
+      salary_max: salary_max ?? null,
       job_type,
       deadline,
     });
@@ -47,7 +53,7 @@ export const postJob = async (req, res) => {
 export const updateJob = async (req, res) => {
   try {
     const { id } = req.params;
-    const { title, description, location, industry, salary, job_type, deadline } = req.body;
+    const { title, description, location, industry, salary, salary_min, salary_max, job_type, deadline } = req.body;
 
     // Check if job exists
     const job = await findJobById(id);
@@ -65,12 +71,21 @@ export const updateJob = async (req, res) => {
       return res.status(400).json({ message: "Job type must be full-time, part-time or contract" });
     }
 
+    const resolvedMin = salary_min !== undefined ? salary_min : job.salary_min;
+    const resolvedMax = salary_max !== undefined ? salary_max : job.salary_max;
+
+    if (resolvedMin != null && resolvedMax != null && resolvedMin > resolvedMax) {
+      return res.status(400).json({ message: "salary_min cannot be greater than salary_max" });
+    }
+
     const updatedJob = await updateJobById(id, {
       title: title || job.title,
       description: description || job.description,
       location: location || job.location,
       industry: industry || job.industry,
-      salary: salary || job.salary,
+      salary: salary !== undefined ? salary : job.salary,
+      salary_min: resolvedMin,
+      salary_max: resolvedMax,
       job_type: job_type || job.job_type,
       deadline: deadline || job.deadline,
     });
@@ -113,11 +128,23 @@ export const deleteJob = async (req, res) => {
 // GET /api/jobs
 export const getJobs = async (req, res) => {
   try {
-    const { title, keyword, location, industry, job_type } = req.query;
+    const { title, keyword, location, industry, job_type, min_salary, max_salary } = req.query;
+
+    if (min_salary !== undefined && max_salary !== undefined && Number(min_salary) > Number(max_salary)) {
+      return res.status(400).json({ message: "min_salary cannot be greater than max_salary" });
+    }
 
     let jobs;
-    if (title || keyword || location || industry || job_type) {
-      jobs = await searchJobs({ title, keyword, location, industry, job_type });
+    if (title || keyword || location || industry || job_type || min_salary !== undefined || max_salary !== undefined) {
+      jobs = await searchJobs({
+        title,
+        keyword,
+        location,
+        industry,
+        job_type,
+        min_salary: min_salary !== undefined ? Number(min_salary) : undefined,
+        max_salary: max_salary !== undefined ? Number(max_salary) : undefined,
+      });
     } else {
       jobs = await findAllJobs();
     }
@@ -137,12 +164,17 @@ export const getJobs = async (req, res) => {
   }
 };
 
-// GET /api/jobs/search?title=&location=
+// GET /api/jobs/search?title=&location=&min_salary=&max_salary=
 export const searchJobsList = async (req, res) => {
   try {
-    const { title, location } = req.query;
+    const { title, location, min_salary, max_salary } = req.query;
 
-    const jobs = await searchJobs({ title, location });
+    const jobs = await searchJobs({
+      title,
+      location,
+      min_salary: min_salary !== undefined ? Number(min_salary) : undefined,
+      max_salary: max_salary !== undefined ? Number(max_salary) : undefined,
+    });
 
     res.status(200).json({
       message: "Job search completed successfully",

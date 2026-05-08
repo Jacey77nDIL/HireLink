@@ -37,6 +37,8 @@ CREATE TABLE IF NOT EXISTS jobs (
   location VARCHAR(100) NOT NULL,
   industry VARCHAR(100) NOT NULL,
   salary VARCHAR(100),
+  salary_min INTEGER,
+  salary_max INTEGER,
   job_type VARCHAR(50) CHECK (job_type IN ('full-time', 'part-time', 'contract')) NOT NULL,
   deadline DATE,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,

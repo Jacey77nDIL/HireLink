@@ -49,7 +49,8 @@ backend/
         ├── email.js
         ├── init.sql                    # Database schema
         └── migrations/
-            └── 001_applied_status.sql  # Upgrade script for existing databases
+            ├── 001_applied_status.sql  # Upgrade script for existing databases
+            └── 002_salary_range.sql    # Adds salary_min / salary_max columns
 ```
 
 ---
@@ -76,10 +77,11 @@ npm install
 psql -d your_database_name -f app/core/init.sql
 ```
 
-**Existing database** (upgrading from `pending` status) — run the migration:
+**Existing database** — run migrations as needed:
 
 ```bash
 psql -d your_database_name -f app/core/migrations/001_applied_status.sql
+psql -d your_database_name -f app/core/migrations/002_salary_range.sql
 ```
 
 ### Environment Variables
@@ -141,7 +143,7 @@ Defined in `app/core/init.sql`.
 | `users` | Core accounts (`name`, `email`, `password`, `role`) |
 | `jobseeker_profiles` | Bio, skills, experience, resume URL, location |
 | `employer_profiles` | Company name, description, industry, website, location |
-| `jobs` | Listings linked to `employer_id` |
+| `jobs` | Listings linked to `employer_id` (`salary_min`, `salary_max` for range filtering) |
 | `applications` | Job applications (`job_id`, `jobseeker_id`, `status`, `cover_letter`) |
 | `password_reset_tokens` | One-time reset tokens (15-minute expiry) |
 
@@ -216,16 +218,20 @@ No authentication required.
 #### Search jobs
 
 ```http
-GET /api/jobs/search?title=engineer&location=toronto
+GET /api/jobs/search?title=engineer&location=toronto&min_salary=50000&max_salary=100000
 Authorization: Bearer <token>
 ```
 
 | Param | Required | Description |
 | :--- | :--- | :--- |
-| `title` | At least one of `title` or `location` | Partial match on job title (case-insensitive) |
-| `location` | At least one of `title` or `location` | Partial match on location (case-insensitive) |
+| `title` | At least one search param | Partial match on job title (case-insensitive) |
+| `location` | At least one search param | Partial match on location (case-insensitive) |
+| `min_salary` | At least one search param | Jobs whose salary range reaches at least this amount |
+| `max_salary` | At least one search param | Jobs whose starting salary is at most this amount |
 
-Both params can be combined to narrow results. Returns `200` with an empty `jobs` array when nothing matches.
+All params can be combined. Jobs without `salary_min` set are excluded when a salary filter is applied. Returns `200` with an empty `jobs` array when nothing matches.
+
+**Salary range logic:** A job matches when its `[salary_min, salary_max]` overlaps the filter range. Employers set `salary_min` and `salary_max` when creating a listing.
 
 **Example response:**
 ```json
@@ -251,8 +257,18 @@ Both params can be combined to narrow results. Returns `200` with an empty `jobs
 | `title` | Partial match on job title |
 | `keyword` | Alias for `title` (backward compatible) |
 | `location` | Partial match on location |
+| `min_salary` | Minimum salary filter (overlap with job range) |
+| `max_salary` | Maximum salary filter (overlap with job range) |
 | `industry` | Partial match on industry |
 | `job_type` | Exact match: `full-time`, `part-time`, or `contract` |
+
+**Job listing salary fields** (on `POST` / `PUT`):
+
+| Field | Required | Description |
+| :--- | :--- | :--- |
+| `salary_min` | No | Lower bound of salary range (integer, e.g. `60000`) |
+| `salary_max` | No | Upper bound of salary range (integer, e.g. `90000`) |
+| `salary` | No | Display string (e.g. `"$60,000 - $90,000"`) |
 
 ---
 

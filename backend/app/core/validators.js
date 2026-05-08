@@ -125,6 +125,18 @@ export const postJobValidator = [
     .optional()
     .isDate().withMessage("Deadline must be a valid date"),
 
+  body("salary_min")
+    .optional()
+    .isInt({ min: 0 }).withMessage("salary_min must be a non-negative integer"),
+
+  body("salary_max")
+    .optional()
+    .isInt({ min: 0 }).withMessage("salary_max must be a non-negative integer"),
+
+  body("salary")
+    .optional()
+    .trim(),
+
   validate,
 ];
 
@@ -157,6 +169,18 @@ export const updateJobValidator = [
     .optional()
     .isDate().withMessage("Deadline must be a valid date"),
 
+  body("salary_min")
+    .optional()
+    .isInt({ min: 0 }).withMessage("salary_min must be a non-negative integer"),
+
+  body("salary_max")
+    .optional()
+    .isInt({ min: 0 }).withMessage("salary_max must be a non-negative integer"),
+
+  body("salary")
+    .optional()
+    .trim(),
+
   validate,
 ];
 
@@ -171,6 +195,14 @@ export const searchJobsValidator = [
     .trim()
     .notEmpty().withMessage("Location cannot be empty"),
 
+  query("min_salary")
+    .optional()
+    .isInt({ min: 0 }).withMessage("min_salary must be a non-negative integer"),
+
+  query("max_salary")
+    .optional()
+    .isInt({ min: 0 }).withMessage("max_salary must be a non-negative integer"),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -183,9 +215,17 @@ export const searchJobsValidator = [
       });
     }
 
-    if (!req.query.title && !req.query.location) {
+    const { title, location, min_salary, max_salary } = req.query;
+
+    if (!title && !location && min_salary === undefined && max_salary === undefined) {
       return res.status(400).json({
-        message: "At least one search parameter is required: title or location",
+        message: "At least one search parameter is required: title, location, min_salary, or max_salary",
+      });
+    }
+
+    if (min_salary !== undefined && max_salary !== undefined && Number(min_salary) > Number(max_salary)) {
+      return res.status(400).json({
+        message: "min_salary cannot be greater than max_salary",
       });
     }
 
