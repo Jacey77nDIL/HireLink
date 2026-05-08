@@ -6,7 +6,7 @@ import {
   findApplicationsByJob,
   updateApplicationStatus,
   deleteApplication,
-} from "./application.model.js";
+} from "./applications.model.js";
 import { findJobById } from "../jobs/jobs.model.js";
 
 // POST /api/applications/:jobId
