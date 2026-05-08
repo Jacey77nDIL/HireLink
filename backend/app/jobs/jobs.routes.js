@@ -5,16 +5,19 @@ import {
   deleteJob,
   getJobs,
   getJob,
+  searchJobsList,
 } from "./jobs.controller.js";
 import { protect, restrictTo } from "../core/middleware.js";
 import {
   postJobValidator,
   updateJobValidator,
+  searchJobsValidator,
 } from "../core/validators.js";
 
 const router = express.Router();
 
 // ─── General Routes ───────────────────────────────────────────
+router.get("/search", protect, searchJobsValidator, searchJobsList);
 router.get("/", protect, getJobs);
 router.get("/:id", protect, getJob);
 

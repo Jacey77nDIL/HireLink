@@ -54,9 +54,10 @@ export const deleteJobById = async (id) => {
   await pool.query(`DELETE FROM jobs WHERE id = $1`, [id]);
 };
 
-// Search and filter jobs
+// Search and filter jobs by title, location, and optional filters
 export const searchJobs = async (filters) => {
-  const { keyword, location, industry, job_type } = filters;
+  const { title, keyword, location, industry, job_type } = filters;
+  const titleFilter = title || keyword;
 
   let query = `
     SELECT j.*, u.name AS employer_name
@@ -68,9 +69,9 @@ export const searchJobs = async (filters) => {
   const values = [];
   let count = 1;
 
-  if (keyword) {
+  if (titleFilter) {
     query += ` AND j.title ILIKE $${count}`;
-    values.push(`%${keyword}%`);
+    values.push(`%${titleFilter}%`);
     count++;
   }
 

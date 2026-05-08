@@ -206,17 +206,50 @@ No authentication required.
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
+| `GET` | `/search` | Authenticated | Search jobs by `title` and/or `location`. |
 | `GET` | `/` | Authenticated | List all jobs, or filter via query params. |
 | `GET` | `/:id` | Authenticated | Get a single job with employer name. |
 | `POST` | `/` | Employer | Create a job listing. |
 | `PUT` | `/:id` | Employer (owner) | Update a job listing. |
 | `DELETE` | `/:id` | Employer (owner) | Delete a job listing. |
 
-**Search/filter query params** (on `GET /`):
+#### Search jobs
+
+```http
+GET /api/jobs/search?title=engineer&location=toronto
+Authorization: Bearer <token>
+```
+
+| Param | Required | Description |
+| :--- | :--- | :--- |
+| `title` | At least one of `title` or `location` | Partial match on job title (case-insensitive) |
+| `location` | At least one of `title` or `location` | Partial match on location (case-insensitive) |
+
+Both params can be combined to narrow results. Returns `200` with an empty `jobs` array when nothing matches.
+
+**Example response:**
+```json
+{
+  "message": "Job search completed successfully",
+  "count": 2,
+  "jobs": [
+    {
+      "id": 1,
+      "title": "Software Engineer",
+      "location": "Toronto, ON",
+      "employer_name": "Acme Corp",
+      ...
+    }
+  ]
+}
+```
+
+**Additional filter params** (on `GET /api/jobs`):
 
 | Param | Description |
 | :--- | :--- |
-| `keyword` | Partial match on job title |
+| `title` | Partial match on job title |
+| `keyword` | Alias for `title` (backward compatible) |
 | `location` | Partial match on location |
 | `industry` | Partial match on industry |
 | `job_type` | Exact match: `full-time`, `part-time`, or `contract` |

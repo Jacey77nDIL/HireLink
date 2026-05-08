@@ -1,4 +1,4 @@
-import { body, validationResult } from "express-validator";
+import { body, query, validationResult } from "express-validator";
 
 // Middleware to check validation results
 export const validate = (req, res, next) => {
@@ -158,6 +158,39 @@ export const updateJobValidator = [
     .isDate().withMessage("Deadline must be a valid date"),
 
   validate,
+];
+
+export const searchJobsValidator = [
+  query("title")
+    .optional()
+    .trim()
+    .notEmpty().withMessage("Title cannot be empty"),
+
+  query("location")
+    .optional()
+    .trim()
+    .notEmpty().withMessage("Location cannot be empty"),
+
+  (req, res, next) => {
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({
+        message: "Validation failed",
+        errors: errors.array().map((err) => ({
+          field: err.path,
+          message: err.msg,
+        })),
+      });
+    }
+
+    if (!req.query.title && !req.query.location) {
+      return res.status(400).json({
+        message: "At least one search parameter is required: title or location",
+      });
+    }
+
+    next();
+  },
 ];
 
 // ─── Application Validators ───────────────────────────────────

@@ -113,12 +113,11 @@ export const deleteJob = async (req, res) => {
 // GET /api/jobs
 export const getJobs = async (req, res) => {
   try {
-    const { keyword, location, industry, job_type } = req.query;
+    const { title, keyword, location, industry, job_type } = req.query;
 
-    // If any filter is provided, use search, otherwise get all jobs
     let jobs;
-    if (keyword || location || industry || job_type) {
-      jobs = await searchJobs({ keyword, location, industry, job_type });
+    if (title || keyword || location || industry || job_type) {
+      jobs = await searchJobs({ title, keyword, location, industry, job_type });
     } else {
       jobs = await findAllJobs();
     }
@@ -135,6 +134,24 @@ export const getJobs = async (req, res) => {
   } catch (error) {
     console.error("Get jobs error:", error.message);
     res.status(500).json({ message: "Server error getting job listings" });
+  }
+};
+
+// GET /api/jobs/search?title=&location=
+export const searchJobsList = async (req, res) => {
+  try {
+    const { title, location } = req.query;
+
+    const jobs = await searchJobs({ title, location });
+
+    res.status(200).json({
+      message: "Job search completed successfully",
+      count: jobs.length,
+      jobs,
+    });
+  } catch (error) {
+    console.error("Search jobs error:", error.message);
+    res.status(500).json({ message: "Server error searching job listings" });
   }
 };
 
