@@ -128,5 +128,89 @@ Testing includes:
 ## Project Status
 
 Project is currently under active development.
+## Project Structure
+
+```bash
+HireLink/
+│
+├── backend/          # Express + TypeScript backend
+├── front-end/        # React frontend
+├── README.md         # Project documentation
+├── package.json
+└── .gitignore
+```
+## Environment Variables
+
+Create a `.env` file inside the backend folder and add the following:
+
+```env
+PORT=5000
+DATABASE_URL=your_database_url
+JWT_SECRET=your_secret_key
+```
+
+Make sure sensitive credentials are never pushed to GitHub.
+## Contribution Guide
+
+1. Fork the repository
+2. Create a new branch
+
+```bash
+git checkout -b feature-name
+```
+
+3. Commit your changes
+
+```bash
+git commit -m "feat: add new feature"
+```
+
+4. Push to GitHub
+
+```bash
+git push origin feature-name
+```
+
+5. Open a Pull Request
+##  Deployment
+
+Frontend and backend deployment will be handled using modern cloud hosting platforms.
+
+Suggested platforms:
+- Vercel (Frontend)
+- Render / Railway (Backend)
+##  QA Workflow
+
+Quality Assurance process includes:
+
+- API endpoint validation
+- Authentication testing
+- CRUD functionality testing
+- Frontend responsiveness testing
+- End-to-end workflow testing
+- Bug reporting and verification
+## Bug Reporting
+
+When reporting bugs, include:
+
+- Bug description
+- Expected behavior
+- Actual behavior
+- Steps to reproduce
+- Screenshots (if applicable)
+##  Screenshots
+
+Screenshots will be added as development progresses.
+## Future Improvements
+
+- Resume uploads
+- Email notifications
+- Admin dashboard
+- Advanced search filters
+- Saved jobs feature
+- Real-time messaging
+## 📄 License
+
+This project is for educational purposes only.
 
 
