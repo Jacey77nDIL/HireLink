@@ -209,7 +209,7 @@ Screenshots will be added as development progresses.
 - Advanced search filters
 - Saved jobs feature
 - Real-time messaging
-## 📄 License
+## License
 
 This project is for educational purposes only.
 
