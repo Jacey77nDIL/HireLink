@@ -9,13 +9,17 @@ import {
   getUserById,
 } from "./users.controller.js";
 import { protect, restrictTo } from "../core/middleware.js";
+import {
+  updateMeValidator,
+  changePasswordValidator,
+} from "../core/validators.js";
 
 const router = express.Router();
 
 // ─── Current User Routes ─────────────────────────────────────
 router.get("/me", protect, getMe);
-router.put("/me", protect, updateMe);
-router.put("/me/password", protect, changePassword);
+router.put("/me", protect, updateMeValidator, updateMe);
+router.put("/me/password", protect, changePasswordValidator, changePassword);
 router.delete("/me", protect, deleteMe);
 
 // ─── Admin Routes ─────────────────────────────────────────────
