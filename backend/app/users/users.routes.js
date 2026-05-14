@@ -3,6 +3,7 @@ import {
   getMe,
   updateMe,
   deleteMe,
+  changePassword,
   getUsers,
   deleteUser,
   getUserById,
@@ -14,6 +15,7 @@ const router = express.Router();
 // ─── Current User Routes ─────────────────────────────────────
 router.get("/me", protect, getMe);
 router.put("/me", protect, updateMe);
+router.put("/me/password", protect, changePassword);
 router.delete("/me", protect, deleteMe);
 
 // ─── Admin Routes ─────────────────────────────────────────────
