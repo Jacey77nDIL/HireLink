@@ -1,9 +1,11 @@
 "use client";
 
 import Link from "next/link";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import { Search, Briefcase, MapPin, Filter, X } from "lucide-react";
 import JobCard from "@/components/JobCard";
+import Footer from "@/components/Footer";
 
 // Sample job data - replace with actual API call
 const MOCK_JOBS = [
@@ -119,9 +121,18 @@ const MOCK_JOBS = [
   },
 ];
 
-export default function JobsPage() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [locationTerm, setLocationTerm] = useState("");
+function JobsPageContent() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+  const initialLocation = searchParams.get("location") || "";
+
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [locationTerm, setLocationTerm] = useState(initialLocation);
+
+  useEffect(() => {
+    setSearchTerm(initialSearch);
+    setLocationTerm(initialLocation);
+  }, [initialSearch, initialLocation]);
   const [showFilters, setShowFilters] = useState(false);
   const [filters, setFilters] = useState({
     jobType: [] as string[],
@@ -485,6 +496,19 @@ export default function JobsPage() {
           Load More Jobs
         </button>
       </section>
+      <Footer />
     </div>
+  );
+}
+
+export default function JobsPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-lg text-gray-600 animate-pulse">Loading Jobs...</div>
+      </div>
+    }>
+      <JobsPageContent />
+    </Suspense>
   );
 }
