@@ -267,23 +267,6 @@ function JobsPageContent() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white text-gray-800">
-      {/* Navigation */}
-      <nav className="flex justify-between items-center px-8 py-5 border-b border-gray-200">
-        <Link href="/" className="text-2xl font-bold tracking-tight">
-          HireLink
-        </Link>
-
-        <div className="space-x-6 hidden md:flex">
-          <Link href="/jobs">Jobs</Link>
-          <Link href="/companies">Companies</Link>
-          <Link href="/about">About</Link>
-        </div>
-
-        <button className="bg-black text-white px-4 py-2 rounded-xl">
-          <Link href="/register">Sign Up</Link>
-        </button>
-      </nav>
-
       {/* Header */}
       <section className="px-8 py-12">
         <h2 className="text-4xl font-bold mb-3">Job Opportunities</h2>
@@ -503,11 +486,15 @@ function JobsPageContent() {
 
 export default function JobsPage() {
   return (
-    <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg text-gray-600 animate-pulse">Loading Jobs...</div>
-      </div>
-    }>
+    <Suspense
+      fallback={
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="text-lg text-gray-600 animate-pulse">
+            Loading Jobs...
+          </div>
+        </div>
+      }
+    >
       <JobsPageContent />
     </Suspense>
   );
