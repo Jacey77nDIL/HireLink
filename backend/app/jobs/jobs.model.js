@@ -1,7 +1,18 @@
 import pool from "../core/db.js";
 
 const buildJobSearchFilters = (filters) => {
-  const { title, keyword, location, industry, job_type, min_salary, max_salary } = filters;
+  const {
+    title,
+    keyword,
+    location,
+    industry,
+    job_type,
+    min_salary,
+    max_salary,
+    posted_after,
+    posted_before,
+    posted_on,
+  } = filters;
   const titleFilter = title || keyword;
 
   let whereClause = "WHERE 1=1";
@@ -42,6 +53,24 @@ const buildJobSearchFilters = (filters) => {
     whereClause += ` AND j.salary_min IS NOT NULL AND j.salary_min <= $${count}`;
     values.push(max_salary);
     count++;
+  }
+
+  if (posted_on) {
+    whereClause += ` AND j.created_at >= $${count}::date AND j.created_at < ($${count}::date + interval '1 day')`;
+    values.push(posted_on);
+    count++;
+  } else {
+    if (posted_after) {
+      whereClause += ` AND j.created_at >= $${count}::date`;
+      values.push(posted_after);
+      count++;
+    }
+
+    if (posted_before) {
+      whereClause += ` AND j.created_at < ($${count}::date + interval '1 day')`;
+      values.push(posted_before);
+      count++;
+    }
   }
 
   return { whereClause, values };

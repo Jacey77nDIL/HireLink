@@ -122,14 +122,39 @@ export const deleteJob = async (req, res) => {
 // GET /api/jobs
 export const getJobs = async (req, res) => {
   try {
-    const { title, keyword, location, industry, job_type, min_salary, max_salary } = req.query;
+    const {
+      title,
+      keyword,
+      location,
+      industry,
+      job_type,
+      min_salary,
+      max_salary,
+      posted_after,
+      posted_before,
+      posted_on,
+    } = req.query;
     const { page, limit, offset } = parsePagination(req.query);
 
     if (min_salary !== undefined && max_salary !== undefined && Number(min_salary) > Number(max_salary)) {
       return res.status(400).json({ message: "min_salary cannot be greater than max_salary" });
     }
 
-    const hasFilters = title || keyword || location || industry || job_type || min_salary !== undefined || max_salary !== undefined;
+    if (posted_after && posted_before && posted_after > posted_before) {
+      return res.status(400).json({ message: "posted_after cannot be after posted_before" });
+    }
+
+    const hasFilters =
+      title ||
+      keyword ||
+      location ||
+      industry ||
+      job_type ||
+      min_salary !== undefined ||
+      max_salary !== undefined ||
+      posted_after ||
+      posted_before ||
+      posted_on;
 
     const { rows, total } = hasFilters
       ? await searchJobs(
@@ -141,6 +166,9 @@ export const getJobs = async (req, res) => {
             job_type,
             min_salary: min_salary !== undefined ? Number(min_salary) : undefined,
             max_salary: max_salary !== undefined ? Number(max_salary) : undefined,
+            posted_after,
+            posted_before,
+            posted_on,
           },
           { limit, offset }
         )
@@ -160,7 +188,7 @@ export const getJobs = async (req, res) => {
 // GET /api/jobs/search
 export const searchJobsList = async (req, res) => {
   try {
-    const { title, location, min_salary, max_salary } = req.query;
+    const { title, location, min_salary, max_salary, posted_after, posted_before, posted_on } = req.query;
     const { page, limit, offset } = parsePagination(req.query);
 
     const { rows, total } = await searchJobs(
@@ -169,6 +197,9 @@ export const searchJobsList = async (req, res) => {
         location,
         min_salary: min_salary !== undefined ? Number(min_salary) : undefined,
         max_salary: max_salary !== undefined ? Number(max_salary) : undefined,
+        posted_after,
+        posted_before,
+        posted_on,
       },
       { limit, offset }
     );

@@ -11,8 +11,8 @@ REST API for the HireLink job board platform. Connects employers with job seeker
 | **Authentication** | `/api/auth/*` | Register, login, logout, forgot/reset password (JWT, 7-day expiry) |
 | **User profiles** | `/api/users/*` | Jobseeker & employer profiles, password change, admin user management |
 | **Job listings** | `/api/jobs/*` | CRUD (employer), list & view (authenticated) |
-| **Job search** | `GET /api/jobs/search` | Search by title, location, salary range |
-| **Job filtering** | `GET /api/jobs` | Filter by title, location, industry, job type, salary range |
+| **Job search** | `GET /api/jobs/search` | Search by title, location, salary range, date posted |
+| **Job filtering** | `GET /api/jobs` | Filter by title, location, industry, job type, salary range, date posted |
 | **Salary range** | POST/PUT jobs + search filters | `salary_min` / `salary_max` on listings; `min_salary` / `max_salary` when searching |
 | **Applications** | `/api/apply`, `/api/applications/*` | Apply, list, withdraw, employer review, accept/reject |
 | **Pagination** | All list endpoints | `page` & `limit` query params on jobs, applications, users |
@@ -224,10 +224,10 @@ Empty results return `200` with an empty array and `"total": 0`.
 
 #### Search jobs — `GET /api/jobs/search`
 
-Dedicated search endpoint. Requires at least one of: `title`, `location`, `min_salary`, `max_salary`.
+Dedicated search endpoint. Requires at least one of: `title`, `location`, `min_salary`, `max_salary`, `posted_after`, `posted_before`, `posted_on`.
 
 ```http
-GET /api/jobs/search?title=engineer&location=toronto&min_salary=50000&max_salary=100000&page=1&limit=10
+GET /api/jobs/search?title=engineer&location=toronto&posted_after=2026-05-01&page=1&limit=10
 Authorization: Bearer <token>
 ```
 
@@ -237,7 +237,12 @@ Authorization: Bearer <token>
 | `location` | Partial match on location (case-insensitive) |
 | `min_salary` | Jobs whose range reaches at least this amount |
 | `max_salary` | Jobs whose starting salary is at most this amount |
+| `posted_after` | Jobs posted on or after this date (`YYYY-MM-DD`) |
+| `posted_before` | Jobs posted on or before this date (`YYYY-MM-DD`) |
+| `posted_on` | Jobs posted on this exact date (`YYYY-MM-DD`) |
 | `page`, `limit` | Pagination |
+
+**Date posted** filters use the job's `created_at` timestamp. Use `posted_on` for a single day, or `posted_after` / `posted_before` for a range.
 
 **Example response:**
 
@@ -283,6 +288,9 @@ Authorization: Bearer <token>
 | `job_type` | Exact: `full-time`, `part-time`, `contract` |
 | `min_salary` | Salary range filter (lower bound) |
 | `max_salary` | Salary range filter (upper bound) |
+| `posted_after` | Posted on or after date (`YYYY-MM-DD`) |
+| `posted_before` | Posted on or before date (`YYYY-MM-DD`) |
+| `posted_on` | Posted on exact date (`YYYY-MM-DD`) |
 | `page`, `limit` | Pagination |
 
 #### Salary range

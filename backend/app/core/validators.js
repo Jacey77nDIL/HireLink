@@ -217,6 +217,18 @@ export const searchJobsValidator = [
     .optional()
     .isInt({ min: 0 }).withMessage("max_salary must be a non-negative integer"),
 
+  query("posted_after")
+    .optional()
+    .isDate().withMessage("posted_after must be a valid date (YYYY-MM-DD)"),
+
+  query("posted_before")
+    .optional()
+    .isDate().withMessage("posted_before must be a valid date (YYYY-MM-DD)"),
+
+  query("posted_on")
+    .optional()
+    .isDate().withMessage("posted_on must be a valid date (YYYY-MM-DD)"),
+
   (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
@@ -229,17 +241,32 @@ export const searchJobsValidator = [
       });
     }
 
-    const { title, location, min_salary, max_salary } = req.query;
+    const { title, location, min_salary, max_salary, posted_after, posted_before, posted_on } = req.query;
 
-    if (!title && !location && min_salary === undefined && max_salary === undefined) {
+    if (
+      !title &&
+      !location &&
+      min_salary === undefined &&
+      max_salary === undefined &&
+      !posted_after &&
+      !posted_before &&
+      !posted_on
+    ) {
       return res.status(400).json({
-        message: "At least one search parameter is required: title, location, min_salary, or max_salary",
+        message:
+          "At least one search parameter is required: title, location, min_salary, max_salary, posted_after, posted_before, or posted_on",
       });
     }
 
     if (min_salary !== undefined && max_salary !== undefined && Number(min_salary) > Number(max_salary)) {
       return res.status(400).json({
         message: "min_salary cannot be greater than max_salary",
+      });
+    }
+
+    if (posted_after && posted_before && posted_after > posted_before) {
+      return res.status(400).json({
+        message: "posted_after cannot be after posted_before",
       });
     }
 
