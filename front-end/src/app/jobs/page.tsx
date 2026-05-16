@@ -5,7 +5,6 @@ import { useState, useMemo, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { Search, Briefcase, MapPin, Filter, X } from "lucide-react";
 import JobCard from "@/components/JobCard";
-import Footer from "@/components/Footer";
 
 // Sample job data - replace with actual API call
 const MOCK_JOBS = [
@@ -479,7 +478,6 @@ function JobsPageContent() {
           Load More Jobs
         </button>
       </section>
-      <Footer />
     </div>
   );
 }

@@ -4,7 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { Search, Briefcase, MapPin } from "lucide-react";
 import { motion } from "framer-motion";
-import Footer from "@/components/Footer";
 
 export default function HomePage() {
   const [query, setQuery] = useState("");
@@ -130,7 +129,6 @@ export default function HomePage() {
           ))}
         </div>
       </section>
-      <Footer />
     </>
   );
 }
