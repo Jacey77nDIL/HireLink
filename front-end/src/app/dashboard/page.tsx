@@ -21,7 +21,7 @@ export default function Dashboard() {
             <span>Overview</span>
           </a>
 
-          <a href="#" className="flex items-center gap-3">
+          <a href="/jobs" className="flex items-center gap-3">
             <Briefcase size={18} />
             <span>Jobs</span>
           </a>
@@ -71,7 +71,9 @@ export default function Dashboard() {
         </div>
 
         <section className="bg-white p-6 rounded-2xl shadow mb-10">
-          <h2 className="text-2xl font-semibold mb-6">Recent Job Listings</h2>
+          <h2 className="text-2xl font-semibold mb-6">
+            Recent Job Listings
+          </h2>
 
           <div className="space-y-4">
             {["Frontend Developer", "UI/UX Designer", "Product Manager"].map(
@@ -93,6 +95,28 @@ export default function Dashboard() {
                 </div>
               )
             )}
+          </div>
+        </section>
+
+        <section className="bg-white p-6 rounded-2xl shadow">
+          <h2 className="text-2xl font-semibold mb-6">
+            Application Progress
+          </h2>
+
+          <div className="space-y-4">
+            <div>
+              <p className="mb-2">Google - UI Designer</p>
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="bg-black h-3 rounded-full w-3/4"></div>
+              </div>
+            </div>
+
+            <div>
+              <p className="mb-2">Meta - Frontend Engineer</p>
+              <div className="w-full bg-gray-200 rounded-full h-3">
+                <div className="bg-black h-3 rounded-full w-1/2"></div>
+              </div>
+            </div>
           </div>
         </section>
       </main>
