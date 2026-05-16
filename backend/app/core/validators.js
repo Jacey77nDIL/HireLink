@@ -178,3 +178,11 @@ export const updateStatusValidator = [
 
   validate,
 ];
+
+export const patchStatusValidator = [
+  body("status")
+    .notEmpty().withMessage("Status is required")
+    .isIn(["accepted", "rejected"]).withMessage("Status must be accepted or rejected"),
+
+  validate,
+];

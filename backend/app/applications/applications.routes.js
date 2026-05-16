@@ -9,7 +9,7 @@ import {
 import { protect, restrictTo } from "../core/middleware.js";
 import {
   applyForJobValidator,
-  updateStatusValidator,
+  patchStatusValidator,
 } from "../core/validators.js";
 
 const router = express.Router();
@@ -22,6 +22,6 @@ router.delete("/:id", protect, restrictTo("jobseeker"), withdrawApplication);
 
 // ─── Employer Only Routes ─────────────────────────────────────
 router.get("/job/:job_id", protect, restrictTo("employer"), getJobApplications);
-router.put("/:id/status", protect, restrictTo("employer"), updateStatusValidator, updateStatus);
+router.patch("/:id/status", protect, restrictTo("employer"), patchStatusValidator, updateStatus);
 
 export default router;

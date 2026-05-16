@@ -121,24 +121,22 @@ export const getJobApplications = async (req, res) => {
   }
 };
 
-// PUT /api/applications/:id/status
+// PATCH /api/applications/:id/status — employer accept/reject
 export const updateStatus = async (req, res) => {
   try {
     const { id } = req.params;
     const { status } = req.body;
     const employerId = req.user.id;
 
-    if (!status) {
-      return res.status(400).json({ message: "Status is required" });
-    }
-
-    if (!["applied", "accepted", "rejected"].includes(status)) {
-      return res.status(400).json({ message: "Status must be applied, accepted or rejected" });
-    }
-
     const application = await findApplicationById(id);
     if (!application) {
       return res.status(404).json({ message: "Application not found" });
+    }
+
+    if (application.status !== "applied") {
+      return res.status(400).json({
+        message: "Only applications with status 'applied' can be accepted or rejected",
+      });
     }
 
     const job = await findJobById(application.job_id);
@@ -148,8 +146,13 @@ export const updateStatus = async (req, res) => {
 
     const updatedApplication = await updateApplicationStatus(id, status);
 
+    const statusMessage =
+      status === "accepted"
+        ? "Application accepted"
+        : "Application rejected";
+
     res.status(200).json({
-      message: "Application status updated successfully",
+      message: statusMessage,
       application: formatApplication(updatedApplication),
     });
   } catch (error) {
