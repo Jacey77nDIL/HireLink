@@ -174,7 +174,7 @@ export const applyForJobValidator = [
 export const updateStatusValidator = [
   body("status")
     .notEmpty().withMessage("Status is required")
-    .isIn(["pending", "accepted", "rejected"]).withMessage("Status must be pending, accepted or rejected"),
+    .isIn(["applied", "accepted", "rejected"]).withMessage("Status must be applied, accepted or rejected"),
 
   validate,
 ];

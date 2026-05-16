@@ -132,7 +132,7 @@ Defined in `app/core/init.sql`.
 | `jobseeker_profiles` | Bio, skills, experience, resume URL, location |
 | `employer_profiles` | Company name, description, industry, website, location |
 | `jobs` | Listings linked to `employer_id` |
-| `applications` | Jobseeker applications with status (`pending`, `accepted`, `rejected`) |
+| `applications` | Job applications with status (`applied`, `accepted`, `rejected`) |
 | `password_reset_tokens` | One-time reset tokens (15-minute expiry) |
 
 On registration, an empty profile row is created automatically based on role (`jobseeker` or `employer`).
@@ -226,17 +226,20 @@ No authentication required.
 
 ---
 
-### Applications — `/api/applications`
+### Applications
+
+**Application model (API response):** `id`, `job_id`, `user_id`, `status` (`applied` | `accepted` | `rejected`)
 
 | Method | Endpoint | Access | Description |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/:jobId` | Jobseeker | Apply for a job. Optional `cover_letter` (max 1000 chars). |
-| `GET` | `/me` | Jobseeker | List all applications with job details. |
-| `DELETE` | `/:id` | Jobseeker (owner) | Withdraw a **pending** application. |
-| `GET` | `/job/:jobId` | Employer (job owner) | View all applicants with jobseeker profiles. |
-| `PUT` | `/:id/status` | Employer (job owner) | Update status to `pending`, `accepted`, or `rejected`. |
+| `POST` | `/api/apply/:job_id` | Jobseeker | Apply for a job. Optional `cover_letter` (max 1000 chars). |
+| `POST` | `/api/applications/:jobId` | Jobseeker | Same as above (alias). |
+| `GET` | `/api/applications/me` | Jobseeker | List all applications with job details. |
+| `DELETE` | `/api/applications/:id` | Jobseeker (owner) | Withdraw an **applied** application. |
+| `GET` | `/api/applications/job/:jobId` | Employer (job owner) | View all applicants with jobseeker profiles. |
+| `PUT` | `/api/applications/:id/status` | Employer (job owner) | Update status to `applied`, `accepted`, or `rejected`. |
 
-**Application statuses:** `pending` (default), `accepted`, `rejected`
+**Application statuses:** `applied` (default), `accepted`, `rejected`
 
 Duplicate applications for the same job are rejected (`409`).
 
