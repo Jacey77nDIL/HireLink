@@ -21,7 +21,7 @@ export default function Dashboard() {
             <span>Overview</span>
           </a>
 
-          <a href="#" className="flex items-center gap-3">
+          <a href="/jobs" className="flex items-center gap-3">
             <Briefcase size={18} />
             <span>Jobs</span>
           </a>
