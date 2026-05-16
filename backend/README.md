@@ -234,7 +234,8 @@ No authentication required.
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/apply/:job_id` | Jobseeker | Apply for a job. Optional `cover_letter` (max 1000 chars). |
 | `POST` | `/api/applications/:jobId` | Jobseeker | Same as above (alias). |
-| `GET` | `/api/applications/me` | Jobseeker | List all applications with job details. |
+| `GET` | `/api/applications` | Jobseeker | List the current user's applications with job details. |
+| `GET` | `/api/applications/me` | Jobseeker | Same as above (alias). |
 | `DELETE` | `/api/applications/:id` | Jobseeker (owner) | Withdraw an **applied** application. |
 | `GET` | `/api/applications/job/:jobId` | Employer (job owner) | View all applicants with jobseeker profiles. |
 | `PUT` | `/api/applications/:id/status` | Employer (job owner) | Update status to `applied`, `accepted`, or `rejected`. |

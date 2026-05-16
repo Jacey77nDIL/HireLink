@@ -41,7 +41,7 @@ export const applyForJob = async (req, res) => {
   }
 };
 
-// GET /api/applications/me
+// GET /api/applications  |  GET /api/applications/me
 export const getMyApplications = async (req, res) => {
   try {
     const applications = await findApplicationsByJobseeker(req.user.id);

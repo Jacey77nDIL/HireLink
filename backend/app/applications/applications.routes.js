@@ -15,8 +15,9 @@ import {
 const router = express.Router();
 
 // ─── Jobseeker Only Routes ────────────────────────────────────
-router.post("/:jobId", protect, restrictTo("jobseeker"), applyForJobValidator, applyForJob);
+router.get("/", protect, restrictTo("jobseeker"), getMyApplications);
 router.get("/me", protect, restrictTo("jobseeker"), getMyApplications);
+router.post("/:jobId", protect, restrictTo("jobseeker"), applyForJobValidator, applyForJob);
 router.delete("/:id", protect, restrictTo("jobseeker"), withdrawApplication);
 
 // ─── Employer Only Routes ─────────────────────────────────────
