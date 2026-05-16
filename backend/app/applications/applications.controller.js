@@ -89,7 +89,7 @@ export const withdrawApplication = async (req, res) => {
   }
 };
 
-// GET /api/applications/job/:jobId
+// GET /api/applications/job/:job_id
 export const getJobApplications = async (req, res) => {
   try {
     const jobId = getJobId(req);

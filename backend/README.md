@@ -237,7 +237,7 @@ No authentication required.
 | `GET` | `/api/applications` | Jobseeker | List the current user's applications with job details. |
 | `GET` | `/api/applications/me` | Jobseeker | Same as above (alias). |
 | `DELETE` | `/api/applications/:id` | Jobseeker (owner) | Withdraw an **applied** application. |
-| `GET` | `/api/applications/job/:jobId` | Employer (job owner) | View all applicants with jobseeker profiles. |
+| `GET` | `/api/applications/job/:job_id` | Employer (job owner) | View all applicants for a job (includes jobseeker profile). |
 | `PUT` | `/api/applications/:id/status` | Employer (job owner) | Update status to `applied`, `accepted`, or `rejected`. |
 
 **Application statuses:** `applied` (default), `accepted`, `rejected`

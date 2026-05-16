@@ -21,7 +21,7 @@ router.post("/:jobId", protect, restrictTo("jobseeker"), applyForJobValidator, a
 router.delete("/:id", protect, restrictTo("jobseeker"), withdrawApplication);
 
 // ─── Employer Only Routes ─────────────────────────────────────
-router.get("/job/:jobId", protect, restrictTo("employer"), getJobApplications);
+router.get("/job/:job_id", protect, restrictTo("employer"), getJobApplications);
 router.put("/:id/status", protect, restrictTo("employer"), updateStatusValidator, updateStatus);
 
 export default router;
