@@ -46,7 +46,7 @@ export default function HomePage() {
 
   return (
     <>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-white text-gray-800">
+      <div className="min-h-screen bg-linear-to-br from-slate-50 to-white text-gray-800">
         <section className="px-8 py-16">
           <h2 className="text-4xl font-bold mb-4">
             Find Work That Fits Your Life
